@@ -1,0 +1,79 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+import heapq
+G = nx.Graph()
+cities = {'A': 'SEACET', 'B': 'K.R.Puram', 'C': 'STPL', 'D': 'Nagar', 'E': 'Tin Factory', 'F': 'Whitefield', 'G': 'HOSKOTE'}
+roads = [('A', 'B', 5), ('A', 'C', 3), ('B', 'D', 8), ('C', 'E', 2), ('D', 'E', 4), ('F', 'A', 2), ('G', 'C', 3)]
+G.add_weighted_edges_from(roads)
+pos = nx.spring_layout(G)
+labels = nx.get_edge_attributes(G, 'weight')
+nx.draw(G, pos, labels=cities, with_labels=True, font_weight='bold', node_size=700, node_color='skyblue', font_size=10, edge_color='gray')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+plt.title('City Map with weights')
+plt.show()
+def heuristic(node, goal):
+    return nx.shortest_path_length(G, node, goal, weight='weight')
+def bfs(graph, start, goal):
+    visited = set()
+    queue = [start]
+    bfs_result = []
+    while queue:
+        node = queue.pop(0)
+        if node == goal:
+            return visited
+        if node not in visited:
+            visited.add(node)
+            bfs_result.append(node)
+            queue.extend(neighbor for neighbor in graph.neighbors(node) if neighbor not in visited)
+    return bfs_result
+def dfs(graph, start, goal):
+    visited = set()
+    def dfs_recursive(node):
+        nonlocal visited
+        visited.add(node)
+        dfs_result.append(node)
+        for neighbor in graph.neighbors(node):
+            if neighbor not in visited:
+                dfs_recursive(neighbor)
+    dfs_result = []
+    dfs_recursive(start)
+    return dfs_result
+def astar(graph, start, goal, h_func):
+    priority_queue = [(0, start)]
+    visited = set()
+    parent = {}
+    while priority_queue:
+        current_cost, current_node = heapq.heappop(priority_queue)
+        if current_node == goal:
+            return visited
+        if current_node not in visited:
+            visited.add(current_node)
+            for neighbor, weight in graph[current_node].items():
+                if neighbor not in visited:
+                    total_cost = current_cost + weight['weight'] + h_func(neighbor, goal)
+                    heapq.heappush(priority_queue, (total_cost, neighbor))
+                    parent[neighbor] = current_node
+    return None  
+start_city = 'E'
+goal_city = 'F'
+visited_bfs = bfs(G, start_city, goal_city)
+visited_dfs = dfs(G, start_city, goal_city)
+visited_astar = astar(G, start_city, goal_city, heuristic)
+plt.figure(figsize=(15, 5))
+plt.subplot(1, 3, 1)
+nx.draw(G, pos, with_labels=True, font_weight='bold', node_size=700, node_color='skyblue', font_size=10, edge_color='gray')
+nx.draw_networkx_nodes(G, pos, nodelist=visited_bfs, node_color='orange', node_size=700)
+plt.title('BFS Result')
+plt.subplot(1, 3, 2)
+nx.draw(G, pos, with_labels=True, font_weight='bold', node_size=700, node_color='skyblue', font_size=10, edge_color='gray')
+nx.draw_networkx_nodes(G, pos, nodelist=visited_dfs, node_color='green', node_size=700)
+plt.title('DFS Result')
+plt.subplot(1, 3, 3)
+nx.draw(G, pos, with_labels=True, font_weight='bold', node_size=700, node_color='skyblue', font_size=10, edge_color='gray')
+nx.draw_networkx_nodes(G, pos, nodelist=visited_astar, node_color='red', node_size=700)
+plt.title('A* Result')
+plt.tight_layout()
+plt.show()
+print('A* Search Result:', [cities[node] for node in visited_astar])
+print('BFS Search Result:', [cities[node] for node in visited_bfs])
+print('DFS Search Result:', [cities[node] for node in visited_dfs])
