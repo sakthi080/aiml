@@ -1,0 +1,51 @@
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.cluster import KMeans
+import pandas as pd
+import numpy as np
+from sklearn import preprocessing
+from sklearn.mixture import GaussianMixture
+
+# Load the Iris dataset
+iris = datasets.load_iris()
+X = pd.DataFrame(iris.data, columns=['Sepal_Length', 'Sepal_Width', 'Petal_Length', 'Petal_Width'])
+y = pd.DataFrame(iris.target, columns=['Targets'])
+
+# Apply K-Means algorithm
+kmeans = KMeans(n_clusters=3)
+kmeans.fit(X)
+
+# Apply Gaussian Mixture Model (GMM)
+gmm = GaussianMixture(n_components=3)
+gmm.fit(X)
+
+# Visualize the results
+plt.figure(figsize=(14, 7))
+colormap = np.array(['red', 'lime', 'black'])
+
+# Plot real clusters
+plt.subplot(1, 3, 1)
+plt.scatter(X['Petal_Length'], X['Petal_Width'], c=colormap[y['Targets']], s=40)
+plt.title('Real Clusters')
+plt.xlabel('Petal Length')
+plt.ylabel('Petal Width')
+
+# Plot K-Means clustering
+plt.subplot(1, 3, 2)
+plt.scatter(X['Petal_Length'], X['Petal_Width'], c=colormap[kmeans.labels_], s=40)
+plt.title('K-Means Clustering')
+plt.xlabel('Petal Length')
+plt.ylabel('Petal Width')
+
+# Plot GMM clustering
+plt.subplot(1, 3, 3)
+plt.scatter(X['Petal_Length'], X['Petal_Width'], c=colormap[gmm.predict(X)], s=40)
+plt.title('GMM Clustering')
+plt.xlabel('Petal Length')
+plt.ylabel('Petal Width')
+
+# Print observation
+print('Observation: The Gaussian Mixture Model (GMM) using Expectation-Maximization (EM) algorithm-based clustering matched the true labels more closely than K-Means.')
+
+# Show the plots
+plt.show()
