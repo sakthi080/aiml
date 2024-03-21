@@ -1,0 +1,54 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, export_text
+from sklearn import metrics
+import math
+from sklearn.preprocessing import LabelEncoder
+
+def calculate_entropy(y):
+    unique_labels = y.unique()
+    entropy = 0
+    total_samples = len(y)
+    for label in unique_labels:
+        label_count = len(y[y == label])
+        probability = label_count / total_samples
+        entropy -= probability * math.log2(probability)
+    return entropy
+
+def calculate_information_gain(X, y, feature):
+    entropy_parent = calculate_entropy(y)
+    unique_values = X[feature].unique()
+    total_samples = len(y)
+    weighted_entropy_child = 0
+    for value in unique_values:
+        subset_y = y[X[feature] == value]
+        weight = len(subset_y) / total_samples
+        weighted_entropy_child += weight * calculate_entropy(subset_y)
+    information_gain = entropy_parent - weighted_entropy_child
+    return information_gain
+
+df = pd.read_csv('your_data.csv')  # Provide the path to your CSV file
+target_variable = 'play tennis'
+X = df.drop(target_variable, axis=1)
+y = df[target_variable]
+
+label_encoder = LabelEncoder()
+for column in X.select_dtypes(include=['object']).columns:
+    X[column] = label_encoder.fit_transform(X[column])
+
+entropy_before_split = calculate_entropy(y)
+print(f"Entropy before split: {entropy_before_split:.4f}")
+
+for feature in X.columns:
+    information_gain = calculate_information_gain(X, y, feature)
+    print(f"Information Gain for {feature}: {information_gain:.4f}")
+
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+model = DecisionTreeClassifier(criterion='entropy')
+model.fit(x_train, y_train)
+tree_rules = export_text(model, feature_names=list(X.columns))
+print("Decision Tree Rules:\n", tree_rules)
+
+y_pred = model.predict(x_test)
+accuracy = metrics.accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy * 100:.2f}%")
